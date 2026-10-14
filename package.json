@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "npm run build && VYNQ_STATIC_DIR=dist node --env-file=.env server.mjs",
+    "start": "npm run build && VYNQ_STATIC_DIR=dist node --env-file=.env lib/vynq-server.mjs",
     "test": "node --test",
     "build": "node scripts/build.mjs"
   },

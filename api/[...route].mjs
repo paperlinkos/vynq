@@ -1,6 +1,6 @@
 // Vercel routes every /api/* request through the same VYNQ server handler.
 // Static files are served directly from dist/ by Vercel.
-import { handleRequest } from '../server.mjs';
+import { handleRequest } from '../lib/vynq-server.mjs';
 
 export const config = { api: { bodyParser: false } };
 

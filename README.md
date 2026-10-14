@@ -23,7 +23,7 @@ npm test
 npm run build
 ```
 
-The packaged application is written to `dist/`; deploy that directory with a Node runtime and start it with `node server.mjs`.
+The packaged browser application is written to `dist/`; run the local server with `npm start`.
 
 ## Vercel test deployment
 
