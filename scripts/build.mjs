@@ -7,5 +7,5 @@ await Promise.all([
   cp('index.html', 'dist/index.html'),
   cp('styles.css', 'dist/styles.css')
 ]);
-await build({ entryPoints: ['src/main.js'], bundle: true, format: 'esm', outfile: 'dist/src/main.js', minify: true, sourcemap: true });
+await build({ entryPoints: ['src/main.js'], bundle: true, format: 'esm', outfile: 'dist/assets/app.js', minify: true, sourcemap: true });
 console.log('Built VYNQ application to dist/.');
