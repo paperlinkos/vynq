@@ -1,0 +1,103 @@
+import { Room, RoomEvent, Track } from 'livekit-client';
+import { normaliseMeetingId } from './meeting-id.js';
+
+const app = document.querySelector('#app');
+let liveRoom;
+let watchState = { version: 0, source: '', playing: false, position: 0, updatedAt: 0 };
+let applyingWatchState = false;
+const icons = {
+  video: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 10.5 20 7v10l-5-3.5V18H4V6h11v4.5Z"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>',
+  close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>',
+  mic: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm-6-3h2a4 4 0 0 0 8 0h2a6 6 0 0 1-5 5.91V21h-2v-3.09A6 6 0 0 1 6 12Z"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 10.5 20 7v10l-5-3.5V18H4V6h11v4.5Z"/></svg>',
+  users: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a3 3 0 1 0-2.83-4H11a3 3 0 1 0-2.17 4.83A5 5 0 0 0 5 16.67V18h9v-1.33a5 5 0 0 0-3.25-4.67A5 5 0 0 0 12 10.63 5 5 0 0 0 15.25 12H16Zm2 1.25A4 4 0 0 1 21 16v2h-5v-1.33a6.9 6.9 0 0 0-1.37-4.14A4.99 4.99 0 0 1 18 12.25Z"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H9l-4 4V5Zm2 2v7.17L8.17 13H17V7H7Z"/></svg>',
+  share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3v9.17l2.59-2.58L17 11l-5 5-5-5 1.41-1.41L11 12.17V3h2ZM5 19v-4h2v2h10v-2h2v4H5Z"/></svg>',
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>'
+};
+
+function wordmark() { return '<a class="wordmark" href="#/" aria-label="VYNQ home"><span class="brand-mark">V</span>VYNQ</a>'; }
+function button(label, className = 'button', attrs = '') { return `<button class="${className}" ${attrs}>${label}</button>`; }
+
+function home() {
+  app.innerHTML = `
+    <section class="hero">
+      <nav class="nav">${wordmark()}<span class="nav-note">Made for moments together</span></nav>
+      <div class="hero-content">
+        <div class="eyebrow"><span></span> Video meetings, reimagined</div>
+        <h1>Connect beyond<br>the call.</h1>
+        <p>Meet face to face. Watch together. Share the moment.</p>
+        <div class="hero-actions">
+          ${button('Create a meeting <span class="button-icon">' + icons.arrow + '</span>', 'button button-primary', 'data-action="create"')}
+          ${button('Join a meeting', 'button button-secondary', 'data-action="join"')}
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="visual-orbit orbit-one"></div><div class="visual-orbit orbit-two"></div>
+        <div class="meeting-preview"><div class="preview-head"><span></span><span></span><span></span><b>Live in VYNQ</b></div><div class="preview-body"><div class="preview-main"><i></i><small>Watching together</small></div><div class="preview-tiles"><div>AM</div><div class="tile-dark">JD</div><div>SK</div></div></div></div>
+      </div>
+      <footer>VYNQ <span>•</span> Simple, secure conversations</footer>
+    </section>`;
+}
+
+function modal(kind) {
+  const isCreate = kind === 'create';
+  const title = isCreate ? 'Start a meeting' : 'Join a meeting';
+  const body = isCreate
+    ? '<p>Give your meeting a name. You can invite people once you’re inside.</p><label>Meeting name<input id="meeting-name" maxlength="80" placeholder="Friday catch-up" autofocus></label><label>Your name<input id="display-name" maxlength="50" placeholder="Your name"></label><p id="form-error" class="form-error" role="alert"></p>'
+    : '<p>Enter the meeting code you received to continue.</p><label>Meeting code<input id="meeting-code" autocomplete="off" placeholder="e.g. VYNQ-AB12-CD34-EF56" autofocus></label><label>Your name<input id="display-name" maxlength="50" placeholder="Your name"></label><p id="form-error" class="form-error" role="alert"></p>';
+  app.insertAdjacentHTML('beforeend', `<div class="modal-backdrop" data-action="dismiss"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="event.stopPropagation()"><button class="icon-button modal-close" data-action="dismiss" aria-label="Close">${icons.close}</button><div class="modal-symbol">${isCreate ? icons.video : icons.arrow}</div><h2 id="modal-title">${title}</h2>${body}${button(isCreate ? 'Create meeting' : 'Join meeting', 'button button-primary button-full', 'data-action="submit-' + kind + '"')}</section></div>`);
+}
+
+function room(id, name = 'You', title = 'Meeting') {
+  app.innerHTML = `<section class="room"><header class="room-header">${wordmark()}<div class="room-title"><span class="live-dot"></span><span>${escapeHtml(title)}</span><b>${id}</b></div><span class="connection-state" id="connection-state">Connecting media…</span><button class="share-link" data-action="copy">Copy invite link</button></header><main class="room-stage"><section class="video-grid" id="video-grid"><article class="video-tile self-tile" id="local-tile"><div class="avatar">${name.slice(0, 2).toUpperCase()}</div><span class="tile-name">${escapeHtml(name)} <i>You</i></span><span class="tile-state" id="local-state">Camera off</span></article><article class="empty-tile" id="empty-state"><div class="empty-icon">${icons.users}</div><h2>You're the first one here</h2><p>Share the link to invite others to this meeting.</p><button class="button button-secondary" data-action="copy">Copy invite link</button></article></section><aside class="room-sidebar"><p class="sidebar-label">Watch together</p><div class="watch-card"><div class="watch-play">${icons.play}</div><h3>Shared viewing</h3><p>Choose a supported video when everyone has joined.</p><button class="text-button" disabled>Coming in Phase 5</button></div></aside></main><footer class="controls"><div class="control-group"><button class="control" data-control="mic">${icons.mic}<span>Mic</span></button><button class="control" data-control="camera">${icons.camera}<span>Camera</span></button></div><div class="control-group"><button class="control" disabled>${icons.users}<span>People</span></button><button class="control" disabled>${icons.chat}<span>Chat</span></button><button class="control" disabled>${icons.share}<span>Share</span></button></div><button class="leave" data-action="leave">Leave</button></footer></section>`;
+}
+
+function escapeHtml(value) { const node = document.createElement('span'); node.textContent = value; return node.innerHTML; }
+function storedSession(id) { try { return JSON.parse(sessionStorage.getItem(`vynq:${id}`)); } catch { return null; } }
+function saveSession(id, session) { sessionStorage.setItem(`vynq:${id}`, JSON.stringify(session)); }
+async function request(path, options = {}) { const response = await fetch(path, { headers: { 'Content-Type': 'application/json', ...options.headers }, ...options }); const value = await response.json(); if (!response.ok) throw new Error(value.error || 'Something went wrong.'); return value; }
+function showFormError(message) { const area = document.querySelector('#form-error'); if (area) area.textContent = message; }
+function setConnection(message, type = '') { const state = document.querySelector('#connection-state'); if (state) { state.textContent = message; state.className = `connection-state ${type}`; } }
+function waitingRoom(title) { app.innerHTML = `<section class="hero"><nav class="nav">${wordmark()}</nav><div class="hero-content"><div class="eyebrow"><span></span> Waiting room</div><h1>You’re almost<br>in.</h1><p>The host needs to admit you before you can join ${escapeHtml(title)}.</p></div></section>`; setTimeout(navigate, 4000); }
+function mountHostControls() { const controls = document.querySelectorAll('.control'); if (controls[2]) { controls[2].disabled = false; controls[2].dataset.action = 'participants'; } if (controls[4]) { controls[4].disabled = false; controls[4].dataset.control = 'screen'; controls[4].querySelector('span').textContent = 'Screen'; } }
+async function showParticipants() { const id = location.hash.split('/').pop(); try { const value = await request(`/api/meetings/${id}/participants`, { headers: { 'X-VYNQ-Session': storedSession(id).token } }); app.insertAdjacentHTML('beforeend', `<div class="modal-backdrop" data-action="dismiss"><section class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()"><button class="icon-button modal-close" data-action="dismiss" aria-label="Close">${icons.close}</button><h2>People</h2>${value.participants.map(person => `<p><b>${escapeHtml(person.name)}</b> · ${person.status}${person.role === 'guest' ? ` <button class="text-button" data-action="participant-${person.status === 'waiting' ? 'admit' : 'remove'}" data-participant="${person.id}">${person.status === 'waiting' ? 'Admit' : 'Remove'}</button>` : ''}</p>`).join('')}</section></div>`); } catch (error) { setConnection(error.message, 'warning'); } }
+async function updateParticipant(id, action) { const meetingId = location.hash.split('/').pop(); try { await request(`/api/meetings/${meetingId}/participants/${id}/${action}`, { method: 'POST', headers: { 'X-VYNQ-Session': storedSession(meetingId).token } }); document.querySelector('.modal-backdrop')?.remove(); showParticipants(); } catch (error) { setConnection(error.message, 'warning'); } }
+function addRemoteTile(participant) { const tile = document.createElement('article'); tile.className = 'video-tile remote-tile'; tile.id = `remote-${participant.identity}`; tile.innerHTML = `<div class="avatar">${escapeHtml((participant.name || 'Guest').slice(0, 2).toUpperCase())}</div><span class="tile-name">${escapeHtml(participant.name || 'Guest')}</span><span class="tile-state">Camera off</span>`; document.querySelector('#video-grid')?.append(tile); document.querySelector('#empty-state')?.remove(); return tile; }
+function attachTrack(track, participant, local = false) { if (track.kind !== Track.Kind.Video) return; const tile = local ? document.querySelector('#local-tile') : document.querySelector(`#remote-${participant.identity}`) || addRemoteTile(participant); const element = track.attach(); element.autoplay = true; element.playsInline = true; tile.querySelectorAll('video').forEach(video => video.remove()); tile.prepend(element); tile.querySelector('.avatar')?.remove(); tile.querySelector('.tile-state').textContent = 'Camera on'; }
+function isHost() { return meetingSession()?.role === 'host'; }
+function meetingSession() { const match = location.hash.match(/^#\/room\/(VYNQ-[A-Z0-9-]+)$/); return match ? storedSession(match[1]) : null; }
+function validWatchSource(value) { try { const url = new URL(value); return url.protocol === 'https:' && /\.(mp4|webm|ogv)(?:$|[?#])/i.test(url.pathname + url.search); } catch { return false; } }
+function mountWatch() { const card = document.querySelector('.watch-card'); if (!card) return; card.innerHTML = `<div class="watch-play">${icons.play}</div><h3>Watch together</h3><p id="watch-status">${isHost() ? 'Choose a direct HTTPS MP4, WebM, or OGV source.' : 'Waiting for the host to choose a video.'}</p>${isHost() ? '<button class="text-button" data-action="watch-open">Choose video</button>' : ''}`; }
+function renderWatch(state) { const grid = document.querySelector('#video-grid'); if (!grid || !state.source) return; let stage = document.querySelector('#watch-stage'); if (!stage) { stage = document.createElement('article'); stage.id = 'watch-stage'; stage.className = 'empty-tile'; grid.prepend(stage); } stage.innerHTML = `<video id="watch-video" playsinline preload="metadata" src="${escapeHtml(state.source)}"></video><span class="tile-name">Watching together</span><span class="tile-state">${isHost() ? 'You control playback' : 'Host controls playback'}</span>`; stage.querySelector('video').addEventListener('error', () => { const status = document.querySelector('#watch-status'); if (status) status.textContent = 'This source could not be played in this browser.'; }); }
+function applyWatchState(state) { if (!state?.source || !validWatchSource(state.source) || state.version < watchState.version) return; const existing = document.querySelector('#watch-video'); if (!existing || existing.currentSrc !== state.source) renderWatch(state); watchState = state; const video = document.querySelector('#watch-video'); if (!video || video.readyState < 1) { video?.addEventListener('loadedmetadata', () => applyWatchState(state), { once: true }); return; } const expected = state.position + (state.playing ? Math.max(0, (Date.now() - state.updatedAt) / 1000) : 0); applyingWatchState = true; if (Math.abs(video.currentTime - expected) > 0.5) video.currentTime = Math.max(0, expected); if (state.playing) video.play().catch(() => { const status = document.querySelector('#watch-status'); if (status) status.textContent = 'Tap play to allow synchronized playback.'; }); else video.pause(); applyingWatchState = false; const status = document.querySelector('#watch-status'); if (status) status.textContent = `${state.playing ? 'Playing' : 'Paused'} · ${isHost() ? 'You control playback' : 'Host controls playback'}`; }
+async function publishWatchState() { if (!liveRoom || !isHost() || !watchState.source) return; const video = document.querySelector('#watch-video'); watchState = { ...watchState, version: Math.max(watchState.version + 1, Date.now()), position: video?.currentTime || 0, playing: !video?.paused, updatedAt: Date.now() }; await liveRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(watchState)), { reliable: true, topic: 'vynq-watch' }); }
+function openWatchChooser() { const card = document.querySelector('.watch-card'); if (!card || !isHost()) return; card.innerHTML = `<h3>Choose a video</h3><label>Direct video URL<input id="watch-source" type="url" placeholder="https://example.com/video.mp4"></label><p id="watch-status">Only HTTPS MP4, WebM, and OGV sources are supported in this MVP.</p><button class="text-button" data-action="watch-start">Start for everyone</button>`; }
+async function startWatch() { const source = document.querySelector('#watch-source')?.value.trim(); if (!validWatchSource(source)) { const status = document.querySelector('#watch-status'); if (status) status.textContent = 'Enter a direct HTTPS MP4, WebM, or OGV URL.'; return; } watchState = { version: Date.now(), source, playing: false, position: 0, updatedAt: Date.now() }; renderWatch(watchState); await publishWatchState(); }
+async function connectMedia(id) { mountWatch(); try { const media = await request(`/api/meetings/${id}/livekit-token`, { method: 'POST', headers: { 'X-VYNQ-Session': storedSession(id).token } }); liveRoom = new Room({ adaptiveStream: true, dynacast: true }); liveRoom.on(RoomEvent.TrackSubscribed, (track, _, participant) => attachTrack(track, participant)); liveRoom.on(RoomEvent.ParticipantConnected, participant => { addRemoteTile(participant); publishWatchState(); }); liveRoom.on(RoomEvent.ParticipantDisconnected, participant => document.querySelector(`#remote-${participant.identity}`)?.remove()); liveRoom.on(RoomEvent.LocalTrackPublished, publication => attachTrack(publication.track, liveRoom.localParticipant, true)); liveRoom.on(RoomEvent.DataReceived, (payload, _, __, topic) => { if (topic !== 'vynq-watch') return; try { applyWatchState(JSON.parse(new TextDecoder().decode(payload))); } catch { /* ignore malformed packets */ } }); liveRoom.on(RoomEvent.Reconnecting, () => setConnection('Reconnecting…', 'warning')); liveRoom.on(RoomEvent.Reconnected, () => setConnection('Media connected', 'connected')); liveRoom.on(RoomEvent.Disconnected, () => setConnection('Media disconnected', 'warning')); await liveRoom.connect(media.url, media.token); setConnection('Media connected', 'connected'); } catch (error) { setConnection(error.message, 'warning'); } }
+async function toggleMedia(kind, button) { if (!liveRoom) return setConnection('Live media is unavailable until LiveKit is configured.', 'warning'); try { const screen = kind === 'screen'; const camera = kind === 'camera'; const enabled = screen ? !liveRoom.localParticipant.isScreenShareEnabled : camera ? !liveRoom.localParticipant.isCameraEnabled : !liveRoom.localParticipant.isMicrophoneEnabled; if (screen) await liveRoom.localParticipant.setScreenShareEnabled(enabled); else if (camera) await liveRoom.localParticipant.setCameraEnabled(enabled); else await liveRoom.localParticipant.setMicrophoneEnabled(enabled); button.classList.toggle('active', enabled); button.querySelector('span').textContent = screen ? (enabled ? 'Sharing' : 'Screen') : camera ? (enabled ? 'Camera on' : 'Camera') : (enabled ? 'Mic on' : 'Mic'); if (camera) document.querySelector('#local-state').textContent = enabled ? 'Camera on' : 'Camera off'; } catch (error) { setConnection(`Could not access ${kind}: ${error.message}`, 'warning'); } }
+async function navigate() { liveRoom?.disconnect(); liveRoom = null; const found = location.hash.match(/^#\/room\/(VYNQ-[A-Z0-9-]+)$/); if (!found) return home(); const session = storedSession(found[1]); if (!session) { home(); modal('join'); document.querySelector('#meeting-code').value = found[1]; return showFormError('Enter your name to join this meeting.'); } try { const value = await request(`/api/meetings/${found[1]}`, { headers: { 'X-VYNQ-Session': session.token } }); if (value.participant.status === 'waiting') return waitingRoom(value.meeting.title); room(value.meeting.id, value.participant.name, value.meeting.title); if (value.participant.role === 'host') mountHostControls(); connectMedia(found[1]); } catch (error) { sessionStorage.removeItem(`vynq:${found[1]}`); home(); modal('join'); document.querySelector('#meeting-code').value = found[1]; showFormError(error.message); } }
+async function join(code, name) { const id = normaliseMeetingId(code); if (!id) return showFormError('Enter a valid meeting code, for example VYNQ-AB12-CD34-EF56.'); try { const initData = window.Telegram?.WebApp?.initData; const value = await request(initData ? '/api/telegram/join' : `/api/meetings/${id}/join`, { method: 'POST', body: JSON.stringify(initData ? { meetingId: id, initData } : { name }) }); saveSession(id, value.session); location.hash = `#/room/${id}`; } catch (error) { showFormError(error.message); } }
+async function create() { try { const initData = window.Telegram?.WebApp?.initData; const value = await request(initData ? '/api/telegram/meetings' : '/api/meetings', { method: 'POST', body: JSON.stringify(initData ? { title: document.querySelector('#meeting-name').value, initData } : { title: document.querySelector('#meeting-name').value, hostName: document.querySelector('#display-name').value }) }); saveSession(value.meeting.id, value.session); location.hash = `#/room/${value.meeting.id}`; } catch (error) { showFormError(error.message); } }
+
+app.addEventListener('click', (event) => {
+  const target = event.target.closest('[data-action]'); if (!target) return;
+  const action = target.dataset.action;
+  if (action === 'create' || action === 'join') modal(action);
+  if (action === 'dismiss') document.querySelector('.modal-backdrop')?.remove();
+  if (action === 'submit-create') create();
+  if (action === 'submit-join') join(document.querySelector('#meeting-code').value, document.querySelector('#display-name').value);
+  if (action === 'watch-open') openWatchChooser();
+  if (action === 'watch-start') startWatch();
+  if (action === 'participants') showParticipants();
+  if (action === 'participant-admit' || action === 'participant-remove') updateParticipant(target.dataset.participant, action.replace('participant-', ''));
+  if (action === 'copy') { navigator.clipboard?.writeText(location.href); target.textContent = 'Link copied'; setTimeout(() => target.textContent = 'Copy invite link', 1800); }
+  if (action === 'leave') location.hash = '#/';
+  if (target.dataset.control) toggleMedia(target.dataset.control, target);
+});
+app.addEventListener('play', event => { if (event.target.id === 'watch-video' && isHost() && !applyingWatchState) publishWatchState(); }, true);
+app.addEventListener('pause', event => { if (event.target.id === 'watch-video' && isHost() && !applyingWatchState) publishWatchState(); }, true);
+app.addEventListener('seeked', event => { if (event.target.id === 'watch-video' && isHost() && !applyingWatchState) publishWatchState(); }, true);
+app.addEventListener('keydown', e => { if (e.key === 'Enter' && document.querySelector('#meeting-code')) join(document.querySelector('#meeting-code').value, document.querySelector('#display-name').value); if (e.key === 'Escape') document.querySelector('.modal-backdrop')?.remove(); });
+window.addEventListener('hashchange', navigate); navigate();

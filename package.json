@@ -1,0 +1,19 @@
+{
+  "name": "vynq",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npm run build && cd dist && node --env-file=../.env server.mjs",
+    "test": "node --test",
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
+    "livekit-client": "^2.22.4",
+    "livekit-server-sdk": "^2.19.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
