@@ -6,9 +6,10 @@ import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { neon } from '@neondatabase/serverless';
 
-const root = process.cwd();
+const appRoot = process.cwd();
+const root = normalize(process.env.VYNQ_STATIC_DIR || appRoot);
 const port = Number(process.env.PORT || 4173);
-const dataDir = normalize(process.env.VYNQ_DATA_DIR || (process.env.VERCEL ? '/tmp/vynq-data' : join(root, '.vynq-data')));
+const dataDir = normalize(process.env.VYNQ_DATA_DIR || (process.env.VERCEL ? '/tmp/vynq-data' : join(appRoot, '.vynq-data')));
 const dataFile = join(dataDir, 'meetings.json');
 const meetingTtlHours = Number(process.env.VYNQ_MEETING_TTL_HOURS || 24);
 const oneDay = 24 * 60 * 60 * 1000;
