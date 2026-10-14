@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createMeetingId, normaliseMeetingId } from '../src/meeting-id.js';
+import { createMeetingId, normaliseMeetingId } from '../client/meeting-id.js';
 
 test('creates a shareable VYNQ meeting id', () => {
   assert.match(createMeetingId(() => 0), /^VYNQ-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
