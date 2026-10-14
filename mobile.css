@@ -26,3 +26,17 @@
 .approval-action { color: #4f6d0c; font-weight: 800; margin-left: 8px; cursor: pointer; }
 .request-later { display: block; margin: 16px auto 0; cursor: pointer; }
 @keyframes waiting-spin { to { transform: rotate(360deg); } }
+
+.prejoin { min-height: 100svh; background: #f7f7f4; color: #151716; padding: 28px clamp(24px, 7vw, 108px); }
+.prejoin-header { display: flex; justify-content: space-between; align-items: center; color: #6b716d; font: 12px 'DM Mono', monospace; }
+.prejoin-main { width: min(1040px, 100%); margin: clamp(48px, 12vh, 120px) auto 0; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 42px; align-items: center; }
+.prejoin-preview { aspect-ratio: 16 / 10; position: relative; overflow: hidden; border-radius: 20px; background: #252925; display: grid; place-items: center; box-shadow: 0 24px 70px #171a1725; }
+.prejoin-preview video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+.preview-empty { position: absolute; color: #dce2d9; font: 14px 'DM Mono', monospace; }
+.prejoin-panel h1 { margin: 14px 0; font-size: clamp(38px, 5vw, 58px); letter-spacing: -.06em; }
+.prejoin-panel > p { color: #6b716d; line-height: 1.6; }
+.prejoin-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 28px 0 18px; }
+.prejoin-actions .button:first-child { grid-column: 1 / -1; }
+.prejoin-panel label { display: block; font-size: 12px; font-weight: 700; margin: 14px 0; }
+.prejoin-panel select { display: block; width: 100%; margin-top: 7px; padding: 13px; border: 1px solid #dedfd9; border-radius: 10px; background: #fff; color: #151716; font: inherit; }
+@media (max-width: 760px) { .prejoin { padding: 20px; } .prejoin-main { margin-top: 48px; grid-template-columns: 1fr; gap: 26px; } .prejoin-preview { border-radius: 15px; } .prejoin-panel h1 { font-size: 42px; } }
