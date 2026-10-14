@@ -7,3 +7,21 @@
     display: none;
   }
 }
+
+.waiting-alert {
+  border: 0;
+  border-radius: 8px;
+  background: #d5fb54;
+  color: #202320;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.waiting-room .hero-content { max-width: 560px; }
+.waiting-room .hero-content b { color: #202320; }
+.waiting-pulse { width: 54px; height: 54px; border: 8px solid #e5e7df; border-top-color: #91ba18; border-radius: 50%; margin-bottom: 24px; animation: waiting-spin 1s linear infinite; }
+.waiting-hint, .waiting-summary { font-size: 13px !important; color: #6b716d; }
+.approval-action { color: #4f6d0c; font-weight: 800; margin-left: 8px; cursor: pointer; }
+@keyframes waiting-spin { to { transform: rotate(360deg); } }
