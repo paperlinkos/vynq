@@ -24,4 +24,5 @@
 .waiting-pulse { width: 54px; height: 54px; border: 8px solid #e5e7df; border-top-color: #91ba18; border-radius: 50%; margin-bottom: 24px; animation: waiting-spin 1s linear infinite; }
 .waiting-hint, .waiting-summary { font-size: 13px !important; color: #6b716d; }
 .approval-action { color: #4f6d0c; font-weight: 800; margin-left: 8px; cursor: pointer; }
+.request-later { display: block; margin: 16px auto 0; cursor: pointer; }
 @keyframes waiting-spin { to { transform: rotate(360deg); } }
