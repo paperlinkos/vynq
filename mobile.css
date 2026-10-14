@@ -1,0 +1,9 @@
+@media (max-width: 760px) {
+  .control-group:nth-of-type(2) {
+    display: flex;
+  }
+
+  .control-group:nth-of-type(2) .control:not(:first-child) {
+    display: none;
+  }
+}
