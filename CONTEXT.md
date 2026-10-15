@@ -32,6 +32,7 @@ The product direction is now explicit: VYNQ is a Telegram-first instant meeting 
 - In-room microphone, camera, and screen-share controls.
 - Remote LiveKit audio tracks are now attached to the meeting page and removed when unsubscribed.
 - In-call Devices panel with microphone, camera, and speaker switching, a speaker test, and microphone level feedback.
+- Participant tiles now distinguish a pending server presence (`Joining…`) from an actual LiveKit media connection (`Connected` / `Camera on`) and avoid duplicate tiles.
 - Watch Together foundations using LiveKit data messages.
 - Telegram Mini App authentication and webhook endpoints are implemented but not yet configured.
 
