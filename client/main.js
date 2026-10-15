@@ -219,4 +219,4 @@ app.addEventListener('seeked', event => { if (event.target.id === 'watch-video' 
 app.addEventListener('keydown', e => { if (e.key === 'Enter' && document.querySelector('#meeting-code')) join(document.querySelector('#meeting-code').value, document.querySelector('#display-name').value); if (e.key === 'Escape') document.querySelector('.modal-backdrop')?.remove(); });
 app.addEventListener('change', event => { if (event.target.id === 'audio-device') { prejoinOptions.audioId = event.target.value; startPreview(); } if (event.target.id === 'video-device') { prejoinOptions.videoId = event.target.value; startPreview(); } if (event.target.id === 'call-audio-device') switchCallDevice('audioinput', event.target.value); if (event.target.id === 'call-video-device') switchCallDevice('videoinput', event.target.value); if (event.target.id === 'call-output-device') switchCallDevice('audiooutput', event.target.value); });
 window.addEventListener('hashchange', navigate); navigate();
-window.addEventListener('pagehide', notifyLeave);
+// Do not call notifyLeave on pagehide: browsers emit it for reloads as well as real exits.

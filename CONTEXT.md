@@ -29,6 +29,7 @@ The latest release-readiness findings are maintained in `AUDIT.md`.
 - Duplicate Join clicks are blocked in the browser.
 - Host and admitted guests see each other as joined participant tiles before media connects.
 - Leaving a meeting removes the participant from other attendees' presence lists.
+- Refreshing an in-call page now preserves the participant session and reconnects to the same meeting; only the explicit Leave control ends that session. Tab-close presence cleanup needs a future reconnect-grace/heartbeat design so refreshes are never mistaken for departures.
 - LiveKit token generation is configured and verified.
 - Pre-join camera/microphone screen with preview, device pickers, and enter choices.
 - Pre-join now immediately requests browser camera/microphone permission, with a retry control if it was denied or unavailable.
