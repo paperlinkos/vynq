@@ -6,6 +6,8 @@ Last updated: 2026-10-15
 
 VYNQ is a browser-first meeting app with invite links, host admission, participant presence, LiveKit video/audio, screen sharing, and Watch Together support.
 
+The product direction is now explicit: VYNQ is a Telegram-first instant meeting room, not a feature-for-feature Zoom replacement. See `PRODUCT_DIRECTION.md` for the validated meeting model, feature comparison, and delivery order.
+
 ## Live production site
 
 - URL: https://vynq-virid.vercel.app
@@ -56,9 +58,13 @@ Still needed when Telegram launch begins:
 
 ## Known follow-up work
 
-- Verify two-device LiveKit audio/video behavior in real browsers after the latest pre-join deployment.
+- **P0:** Fix remote audio playback. The client currently attaches only video tracks, so incoming LiveKit audio is not mounted in the browser.
+- **P0:** Verify a complete two-device LiveKit audio/video call in real browsers after fixing remote audio.
+- Add in-call microphone, speaker, and camera switching plus an audio test/level indicator.
+- Make participant state explicitly distinguish waiting, admitted, connecting, connected, reconnecting, and left.
+- Make normal-link guest joins idempotent so refresh/retry cannot generate confusing duplicate admission requests.
 - Improve the visual participant grid and device-error messages based on testing feedback.
-- Configure and test the Telegram bot/Mini App integration.
+- Configure and test the Telegram bot/Mini App integration, then add the Telegram-specific one-tap create/share flow.
 - Add Vercel Preview and Development environment variables if preview deployments need full functionality.
 - Add GitHub Actions Vercel deployment secrets if GitHub-driven Vercel deploys are desired in addition to direct deployment.
 
