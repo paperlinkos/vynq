@@ -3,7 +3,7 @@
     display: flex;
   }
 
-  .control-group:nth-of-type(2) .control:not(:first-child) {
+  .control-group:nth-of-type(2) .control:not(:first-child):not([data-action="devices"]) {
     display: none;
   }
 }
@@ -25,6 +25,12 @@
 .waiting-hint, .waiting-summary { font-size: 13px !important; color: #6b716d; }
 .approval-action { color: #4f6d0c; font-weight: 800; margin-left: 8px; cursor: pointer; }
 .request-later { display: block; margin: 16px auto 0; cursor: pointer; }
+.device-modal label { font-size: 12px; font-weight: 700; display: block; margin: 17px 0 8px; }
+.device-modal select { display: block; width: 100%; margin-top: 7px; padding: 12px; border: 1px solid #dedfd9; border-radius: 10px; background: #fff; color: #151716; font: inherit; }
+.device-modal .button { margin-top: 18px; }
+.device-status { min-height: 22px; margin: 14px 0 0 !important; }
+.mic-level { height: 7px; border-radius: 99px; overflow: hidden; background: #e2e5dc; margin: 10px 0 18px; }
+.mic-level span { display: block; width: 3%; height: 100%; border-radius: inherit; background: #91ba18; transition: width .08s linear; }
 @keyframes waiting-spin { to { transform: rotate(360deg); } }
 
 .prejoin { min-height: 100svh; background: #f7f7f4; color: #151716; padding: 28px clamp(24px, 7vw, 108px); }

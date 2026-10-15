@@ -8,6 +8,8 @@ let meetingSubmissionPending = false;
 let knownWaitingGuestIds = new Set();
 let previewStream;
 let prejoinOptions = { audio: true, video: true, audioId: '', videoId: '' };
+let micMeterFrame;
+let micMeterContext;
 let watchState = { version: 0, source: '', playing: false, position: 0, updatedAt: 0 };
 let applyingWatchState = false;
 const icons = {
@@ -19,6 +21,7 @@ const icons = {
   users: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a3 3 0 1 0-2.83-4H11a3 3 0 1 0-2.17 4.83A5 5 0 0 0 5 16.67V18h9v-1.33a5 5 0 0 0-3.25-4.67A5 5 0 0 0 12 10.63 5 5 0 0 0 15.25 12H16Zm2 1.25A4 4 0 0 1 21 16v2h-5v-1.33a6.9 6.9 0 0 0-1.37-4.14A4.99 4.99 0 0 1 18 12.25Z"/></svg>',
   chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H9l-4 4V5Zm2 2v7.17L8.17 13H17V7H7Z"/></svg>',
   share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3v9.17l2.59-2.58L17 11l-5 5-5-5 1.41-1.41L11 12.17V3h2ZM5 19v-4h2v2h10v-2h2v4H5Z"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm0-12v2m0 13v2m8.5-8.5h-2m-13 0h-2m14.51-6.01-1.42 1.42M7.41 16.59l-1.42 1.42m0-12.02 1.42 1.42m9.18 9.18 1.42 1.42"/></svg>',
   play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>'
 };
 
@@ -56,7 +59,7 @@ function modal(kind) {
 }
 
 function room(id, name = 'You', title = 'Meeting') {
-  app.innerHTML = `<section class="room"><div id="remote-audio" aria-hidden="true"></div><header class="room-header">${wordmark()}<div class="room-title"><span class="live-dot"></span><span>${escapeHtml(title)}</span><b>${id}</b></div><span class="connection-state" id="connection-state">Connecting media…</span><button class="share-link" data-action="copy">Copy invite link</button></header><main class="room-stage"><section class="video-grid" id="video-grid"><article class="video-tile self-tile" id="local-tile"><div class="avatar">${name.slice(0, 2).toUpperCase()}</div><span class="tile-name">${escapeHtml(name)} <i>You</i></span><span class="tile-state" id="local-state">Camera off</span></article><article class="empty-tile" id="empty-state"><div class="empty-icon">${icons.users}</div><h2>You're the first one here</h2><p>Share the link to invite others to this meeting.</p><button class="button button-secondary" data-action="copy">Copy invite link</button></article></section><aside class="room-sidebar"><p class="sidebar-label">Watch together</p><div class="watch-card"><div class="watch-play">${icons.play}</div><h3>Shared viewing</h3><p>Choose a supported video when everyone has joined.</p><button class="text-button" disabled>Coming in Phase 5</button></div></aside></main><footer class="controls"><div class="control-group"><button class="control" data-control="mic">${icons.mic}<span>Mic</span></button><button class="control" data-control="camera">${icons.camera}<span>Camera</span></button></div><div class="control-group"><button class="control" disabled>${icons.users}<span>People</span></button><button class="control" disabled>${icons.chat}<span>Chat</span></button><button class="control" disabled>${icons.share}<span>Share</span></button></div><button class="leave" data-action="leave">Leave</button></footer></section>`;
+  app.innerHTML = `<section class="room"><div id="remote-audio" aria-hidden="true"></div><header class="room-header">${wordmark()}<div class="room-title"><span class="live-dot"></span><span>${escapeHtml(title)}</span><b>${id}</b></div><span class="connection-state" id="connection-state">Connecting media…</span><button class="share-link" data-action="copy">Copy invite link</button></header><main class="room-stage"><section class="video-grid" id="video-grid"><article class="video-tile self-tile" id="local-tile"><div class="avatar">${name.slice(0, 2).toUpperCase()}</div><span class="tile-name">${escapeHtml(name)} <i>You</i></span><span class="tile-state" id="local-state">Camera off</span></article><article class="empty-tile" id="empty-state"><div class="empty-icon">${icons.users}</div><h2>You're the first one here</h2><p>Share the link to invite others to this meeting.</p><button class="button button-secondary" data-action="copy">Copy invite link</button></article></section><aside class="room-sidebar"><p class="sidebar-label">Watch together</p><div class="watch-card"><div class="watch-play">${icons.play}</div><h3>Shared viewing</h3><p>Choose a supported video when everyone has joined.</p><button class="text-button" disabled>Coming in Phase 5</button></div></aside></main><footer class="controls"><div class="control-group"><button class="control" data-control="mic">${icons.mic}<span>Mic</span></button><button class="control" data-control="camera">${icons.camera}<span>Camera</span></button></div><div class="control-group"><button class="control" disabled>${icons.users}<span>People</span></button><button class="control" data-action="devices">${icons.settings}<span>Devices</span></button><button class="control" disabled>${icons.chat}<span>Chat</span></button><button class="control" disabled>${icons.share}<span>Share</span></button></div><button class="leave" data-action="leave">Leave</button></footer></section>`;
 }
 
 function prejoin(meeting, participant) {
@@ -114,10 +117,60 @@ function openWatchChooser() { const card = document.querySelector('.watch-card')
 async function startWatch() { const source = document.querySelector('#watch-source')?.value.trim(); if (!validWatchSource(source)) { const status = document.querySelector('#watch-status'); if (status) status.textContent = 'Enter a direct HTTPS MP4, WebM, or OGV URL.'; return; } watchState = { version: Date.now(), source, playing: false, position: 0, updatedAt: Date.now() }; renderWatch(watchState); await publishWatchState(); }
 async function connectMedia(id, options = {}) { mountWatch(); try { const media = await request(`/api/meetings/${id}/livekit-token`, { method: 'POST', headers: { 'X-VYNQ-Session': storedSession(id).token } }); liveRoom = new Room({ adaptiveStream: true, dynacast: true }); liveRoom.on(RoomEvent.TrackSubscribed, (track, _, participant) => attachTrack(track, participant)); liveRoom.on(RoomEvent.TrackUnsubscribed, track => detachTrack(track)); liveRoom.on(RoomEvent.ParticipantConnected, participant => { addRemoteTile(participant); publishWatchState(); }); liveRoom.on(RoomEvent.ParticipantDisconnected, participant => document.querySelector(`#remote-${participant.identity}`)?.remove()); liveRoom.on(RoomEvent.LocalTrackPublished, publication => attachTrack(publication.track, liveRoom.localParticipant, true)); liveRoom.on(RoomEvent.DataReceived, (payload, _, __, topic) => { if (topic !== 'vynq-watch') return; try { applyWatchState(JSON.parse(new TextDecoder().decode(payload))); } catch { /* ignore malformed packets */ } }); liveRoom.on(RoomEvent.Reconnecting, () => setConnection('Reconnecting…', 'warning')); liveRoom.on(RoomEvent.Reconnected, () => setConnection('Media connected', 'connected')); liveRoom.on(RoomEvent.Disconnected, () => setConnection('Media disconnected', 'warning')); await liveRoom.connect(media.url, media.token); if (options.audio) await liveRoom.localParticipant.setMicrophoneEnabled(true, { deviceId: options.audioId || undefined, echoCancellation: true, noiseSuppression: true }); if (options.video) await liveRoom.localParticipant.setCameraEnabled(true, { deviceId: options.videoId || undefined }); const controls = document.querySelectorAll('.control'); if (controls[0] && options.audio) { controls[0].classList.add('active'); controls[0].querySelector('span').textContent = 'Mic on'; } if (controls[1] && options.video) { controls[1].classList.add('active'); controls[1].querySelector('span').textContent = 'Camera on'; } setConnection('Media connected', 'connected'); } catch (error) { setConnection(error.message, 'warning'); } }
 async function toggleMedia(kind, button) { if (!liveRoom) return setConnection('Live media is unavailable until LiveKit is configured.', 'warning'); try { const screen = kind === 'screen'; const camera = kind === 'camera'; const enabled = screen ? !liveRoom.localParticipant.isScreenShareEnabled : camera ? !liveRoom.localParticipant.isCameraEnabled : !liveRoom.localParticipant.isMicrophoneEnabled; if (screen) await liveRoom.localParticipant.setScreenShareEnabled(enabled); else if (camera) await liveRoom.localParticipant.setCameraEnabled(enabled); else await liveRoom.localParticipant.setMicrophoneEnabled(enabled); button.classList.toggle('active', enabled); button.querySelector('span').textContent = screen ? (enabled ? 'Sharing' : 'Screen') : camera ? (enabled ? 'Camera on' : 'Camera') : (enabled ? 'Mic on' : 'Mic'); if (camera) document.querySelector('#local-state').textContent = enabled ? 'Camera on' : 'Camera off'; } catch (error) { setConnection(`Could not access ${kind}: ${error.message}`, 'warning'); } }
+function stopMicMeter() { cancelAnimationFrame(micMeterFrame); micMeterFrame = undefined; micMeterContext?.close().catch(() => {}); micMeterContext = undefined; }
+function startMicMeter() {
+  stopMicMeter();
+  const meter = document.querySelector('#mic-level-fill');
+  const status = document.querySelector('#device-status');
+  const track = liveRoom?.localParticipant.getTrackPublication(Track.Source.Microphone)?.track?.mediaStreamTrack;
+  if (!meter || !track) { if (status) status.textContent = 'Turn your microphone on to check its level.'; return; }
+  try {
+    micMeterContext = new AudioContext();
+    const analyser = micMeterContext.createAnalyser(); analyser.fftSize = 512;
+    micMeterContext.createMediaStreamSource(new MediaStream([track])).connect(analyser);
+    const samples = new Uint8Array(analyser.fftSize);
+    const draw = () => { analyser.getByteTimeDomainData(samples); let total = 0; samples.forEach(value => { const centred = (value - 128) / 128; total += centred * centred; }); meter.style.width = `${Math.min(100, Math.max(3, Math.sqrt(total / samples.length) * 260))}%`; micMeterFrame = requestAnimationFrame(draw); };
+    draw();
+  } catch { if (status) status.textContent = 'Your microphone is on. Level preview is unavailable in this browser.'; }
+}
+async function testSpeaker() {
+  const status = document.querySelector('#device-status');
+  try {
+    const context = new AudioContext();
+    const destination = context.createMediaStreamDestination();
+    const tone = context.createOscillator(); tone.frequency.value = 660; tone.connect(destination);
+    const audio = document.createElement('audio'); audio.autoplay = true; audio.srcObject = destination.stream;
+    const deviceId = liveRoom?.getActiveDevice('audiooutput');
+    if (deviceId && typeof audio.setSinkId === 'function') await audio.setSinkId(deviceId);
+    document.querySelector('#remote-audio')?.append(audio); tone.start(); await audio.play();
+    setTimeout(() => { tone.stop(); audio.remove(); context.close().catch(() => {}); }, 700);
+    if (status) status.textContent = 'Playing a short test sound.';
+  } catch (error) { if (status) status.textContent = `Could not play a test sound: ${error.message}`; }
+}
+async function switchCallDevice(kind, deviceId) {
+  if (!liveRoom) return;
+  const status = document.querySelector('#device-status');
+  try {
+    await liveRoom.switchActiveDevice(kind, deviceId);
+    if (status) status.textContent = 'Device updated.';
+    if (kind === 'audioinput') startMicMeter();
+  } catch (error) { if (status) status.textContent = `Could not change device: ${error.message}`; }
+}
+async function showDeviceSettings() {
+  if (!liveRoom) return setConnection('Enter the meeting before changing devices.', 'warning');
+  app.insertAdjacentHTML('beforeend', `<div class="modal-backdrop" data-action="dismiss"><section class="modal device-modal" role="dialog" aria-modal="true" aria-labelledby="device-title"><button class="icon-button modal-close" data-action="dismiss" aria-label="Close">${icons.close}</button><div class="modal-symbol">${icons.settings}</div><h2 id="device-title">Devices</h2><p>Choose the microphone, camera, and speaker for this call.</p><label>Microphone<select id="call-audio-device"></select></label><div class="mic-level" aria-label="Microphone level"><span id="mic-level-fill"></span></div><label>Camera<select id="call-video-device"></select></label><label>Speaker<select id="call-output-device"></select></label><button class="button button-secondary button-full" data-action="test-speaker">Play test sound</button><p id="device-status" class="device-status" role="status"></p></section></div>`);
+  const status = document.querySelector('#device-status');
+  try {
+    const devices = await Room.getLocalDevices(undefined, true);
+    const fill = (selector, kind, fallback) => { const select = document.querySelector(selector); if (!select) return; const active = liveRoom.getActiveDevice(kind); const options = devices.filter(device => device.kind === kind).map((device, index) => `<option value="${escapeHtml(device.deviceId)}" ${device.deviceId === active ? 'selected' : ''}>${escapeHtml(device.label || `${fallback} ${index + 1}`)}</option>`).join(''); select.innerHTML = options || `<option value="">No ${fallback.toLowerCase()} found</option>`; };
+    fill('#call-audio-device', 'audioinput', 'Microphone'); fill('#call-video-device', 'videoinput', 'Camera'); fill('#call-output-device', 'audiooutput', 'Speaker');
+    startMicMeter();
+  } catch (error) { if (status) status.textContent = `Could not list devices: ${error.message}`; }
+}
 function leavePayload() { const match = location.hash.match(/^#\/room\/(VYNQ-[A-Z0-9-]+)$/); const session = match && storedSession(match[1]); return match && session ? { id: match[1], token: session.token } : null; }
 function notifyLeave() { const leave = leavePayload(); if (!leave) return; fetch(`/api/meetings/${leave.id}/leave`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-VYNQ-Session': leave.token }, keepalive: true }).catch(() => {}); }
-function leaveMeeting() { notifyLeave(); location.hash = '#/'; }
-async function navigate() { clearInterval(hostWaitTimer); stopPreview(); liveRoom?.disconnect(); liveRoom = null; const found = location.hash.match(/^#\/room\/(VYNQ-[A-Z0-9-]+)$/); if (!found) return home(); const session = storedSession(found[1]); if (!session) { home(); modal('join'); document.querySelector('#meeting-code').value = found[1]; return showFormError('Enter your name to join this meeting.'); } try { const value = await request(`/api/meetings/${found[1]}`, { headers: { 'X-VYNQ-Session': session.token } }); if (value.participant.status === 'waiting') return waitingRoom(value.meeting.title); prejoin(value.meeting, value.participant); } catch (error) { sessionStorage.removeItem(`vynq:${found[1]}`); home(); modal('join'); document.querySelector('#meeting-code').value = found[1]; showFormError(error.message); } }
+function leaveMeeting() { stopMicMeter(); notifyLeave(); location.hash = '#/'; }
+async function navigate() { clearInterval(hostWaitTimer); stopMicMeter(); stopPreview(); liveRoom?.disconnect(); liveRoom = null; const found = location.hash.match(/^#\/room\/(VYNQ-[A-Z0-9-]+)$/); if (!found) return home(); const session = storedSession(found[1]); if (!session) { home(); modal('join'); document.querySelector('#meeting-code').value = found[1]; return showFormError('Enter your name to join this meeting.'); } try { const value = await request(`/api/meetings/${found[1]}`, { headers: { 'X-VYNQ-Session': session.token } }); if (value.participant.status === 'waiting') return waitingRoom(value.meeting.title); prejoin(value.meeting, value.participant); } catch (error) { sessionStorage.removeItem(`vynq:${found[1]}`); home(); modal('join'); document.querySelector('#meeting-code').value = found[1]; showFormError(error.message); } }
 async function join(code, name) { const id = normaliseMeetingId(code); if (!id) return showFormError('Enter a valid meeting code, for example VYNQ-AB12-CD34-EF56.'); if (meetingSubmissionPending) return; meetingSubmissionPending = true; setMeetingSubmitState(true); try { const initData = window.Telegram?.WebApp?.initData; const value = await request(initData ? '/api/telegram/join' : `/api/meetings/${id}/join`, { method: 'POST', body: JSON.stringify(initData ? { meetingId: id, initData } : { name }) }); saveSession(id, value.session); const destination = `#/room/${id}`; if (location.hash === destination) await navigate(); else location.hash = destination; } catch (error) { showFormError(error.message); } finally { meetingSubmissionPending = false; setMeetingSubmitState(false); } }
 async function create() { if (meetingSubmissionPending) return; meetingSubmissionPending = true; setMeetingSubmitState(true); try { const initData = window.Telegram?.WebApp?.initData; const value = await request(initData ? '/api/telegram/meetings' : '/api/meetings', { method: 'POST', body: JSON.stringify(initData ? { title: document.querySelector('#meeting-name').value, initData } : { title: document.querySelector('#meeting-name').value, hostName: document.querySelector('#display-name').value }) }); saveSession(value.meeting.id, value.session); location.hash = `#/room/${value.meeting.id}`; } catch (error) { showFormError(error.message); } finally { meetingSubmissionPending = false; setMeetingSubmitState(false); } }
 
@@ -126,7 +179,7 @@ app.addEventListener('click', (event) => {
   const action = target.dataset.action;
   if (action === 'dismiss' && target.classList.contains('modal-backdrop') && event.target !== target) return;
   if (action === 'create' || action === 'join') modal(action);
-  if (action === 'dismiss') document.querySelector('.modal-backdrop')?.remove();
+  if (action === 'dismiss') { stopMicMeter(); document.querySelector('.modal-backdrop')?.remove(); }
   if (action === 'submit-create') create();
   if (action === 'submit-join') join(document.querySelector('#meeting-code').value, document.querySelector('#display-name').value);
   if (action === 'preview-enable') startPreview();
@@ -135,6 +188,8 @@ app.addEventListener('click', (event) => {
   if (action === 'enter-meeting') enterMeeting();
   if (action === 'watch-open') openWatchChooser();
   if (action === 'watch-start') startWatch();
+  if (action === 'devices') showDeviceSettings();
+  if (action === 'test-speaker') testSpeaker();
   if (action === 'participants') showParticipants();
   if (action === 'participant-admit' || action === 'participant-remove') updateParticipant(target.dataset.participant, action.replace('participant-', ''));
   if (action === 'copy') { navigator.clipboard?.writeText(location.href); target.textContent = 'Link copied'; setTimeout(() => target.textContent = 'Copy invite link', 1800); }
@@ -145,6 +200,6 @@ app.addEventListener('play', event => { if (event.target.id === 'watch-video' &&
 app.addEventListener('pause', event => { if (event.target.id === 'watch-video' && isHost() && !applyingWatchState) publishWatchState(); }, true);
 app.addEventListener('seeked', event => { if (event.target.id === 'watch-video' && isHost() && !applyingWatchState) publishWatchState(); }, true);
 app.addEventListener('keydown', e => { if (e.key === 'Enter' && document.querySelector('#meeting-code')) join(document.querySelector('#meeting-code').value, document.querySelector('#display-name').value); if (e.key === 'Escape') document.querySelector('.modal-backdrop')?.remove(); });
-app.addEventListener('change', event => { if (event.target.id === 'audio-device') { prejoinOptions.audioId = event.target.value; startPreview(); } if (event.target.id === 'video-device') { prejoinOptions.videoId = event.target.value; startPreview(); } });
+app.addEventListener('change', event => { if (event.target.id === 'audio-device') { prejoinOptions.audioId = event.target.value; startPreview(); } if (event.target.id === 'video-device') { prejoinOptions.videoId = event.target.value; startPreview(); } if (event.target.id === 'call-audio-device') switchCallDevice('audioinput', event.target.value); if (event.target.id === 'call-video-device') switchCallDevice('videoinput', event.target.value); if (event.target.id === 'call-output-device') switchCallDevice('audiooutput', event.target.value); });
 window.addEventListener('hashchange', navigate); navigate();
 window.addEventListener('pagehide', notifyLeave);
