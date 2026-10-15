@@ -188,7 +188,7 @@ async function join(code, name) { const id = normaliseMeetingId(code); if (!id) 
 async function create() { if (meetingSubmissionPending) return; meetingSubmissionPending = true; setMeetingSubmitState(true); try { const initData = window.Telegram?.WebApp?.initData; const value = await request(initData ? '/api/telegram/meetings' : '/api/meetings', { method: 'POST', body: JSON.stringify(initData ? { title: document.querySelector('#meeting-name').value, initData } : { title: document.querySelector('#meeting-name').value, hostName: document.querySelector('#display-name').value }) }); saveSession(value.meeting.id, value.session); location.hash = `#/room/${value.meeting.id}`; } catch (error) { showFormError(error.message); } finally { meetingSubmissionPending = false; setMeetingSubmitState(false); } }
 
 app.addEventListener('click', (event) => {
-  const target = event.target.closest('[data-action]'); if (!target) return;
+  const target = event.target.closest('[data-action], [data-control]'); if (!target) return;
   const action = target.dataset.action;
   if (action === 'dismiss' && target.classList.contains('modal-backdrop') && event.target !== target) return;
   if (action === 'create' || action === 'join') modal(action);

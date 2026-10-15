@@ -33,6 +33,7 @@ The latest release-readiness findings are maintained in `AUDIT.md`.
 - Pre-join camera/microphone screen with preview, device pickers, and enter choices.
 - Pre-join now immediately requests browser camera/microphone permission, with a retry control if it was denied or unavailable.
 - In-room microphone, camera, and screen-share controls.
+- Fixed the event delegation bug that prevented microphone, camera, and screen-share control clicks from reaching LiveKit.
 - Meeting-room stage redesign: a viewport-bound video canvas, always-visible bottom control dock, responsive grid view, focus view, per-participant pinning, and browser full-screen control. The inactive Watch Together sidebar no longer takes permanent space from calls.
 - Remote LiveKit audio tracks are now attached to the meeting page and removed when unsubscribed.
 - In-call Devices panel with microphone, camera, and speaker switching, a speaker test, and microphone level feedback.
