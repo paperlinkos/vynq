@@ -17,7 +17,7 @@ The latest release-readiness findings are maintained in `AUDIT.md`.
 - Hosting: Vercel
 - Database: Neon Postgres
 - Realtime media: LiveKit Cloud
-- Latest remote-audio fix is pushed to GitHub (`75736c6`), but Vercel production has not yet deployed it because the local Vercel CLI needs renewed authorization.
+- Production was redeployed successfully on 2026-10-15 after renewing the local Vercel login. The canonical URL now serves the current build, including the remote-audio and automatic pre-join permission changes.
 
 ## Completed
 
@@ -64,6 +64,12 @@ Still needed when Telegram launch begins:
 4. Host receives a join prompt and selects **Admit to meeting**.
 5. Both people use the pre-join screen to enable camera/microphone, select devices, and enter.
 6. Test mute/unmute, camera on/off, screen share, and Leave.
+
+## Production verification — 2026-10-15
+
+- Vercel production deployment is `READY` and assigned to the canonical URL above.
+- A clean production API lifecycle check passed: create meeting (201), guest joins waiting room (200), host sees and admits guest (200), guest becomes approved, LiveKit token generation succeeds (200), and guest leave removes the guest from the host participant list.
+- This proves the server-side meeting lifecycle and LiveKit credential delivery. A two-person browser call is still required to prove physical microphone/camera capture, publishing, and remote playback on actual devices.
 
 ## Known follow-up work
 
