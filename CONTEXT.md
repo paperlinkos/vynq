@@ -1,6 +1,6 @@
 # VYNQ — Project Context
 
-Last updated: 2026-10-14
+Last updated: 2026-10-15
 
 ## Product
 
@@ -61,6 +61,12 @@ Still needed when Telegram launch begins:
 - Configure and test the Telegram bot/Mini App integration.
 - Add Vercel Preview and Development environment variables if preview deployments need full functionality.
 - Add GitHub Actions Vercel deployment secrets if GitHub-driven Vercel deploys are desired in addition to direct deployment.
+
+## Coding-agent tooling
+
+- REA (Reverse Engineer Anything) is installed globally for Codex as of 2026-10-15.
+- REA 6.5.0 was verified with its capabilities check; its global `reverse-engineer-anything` skill and Codex MCP registration are present.
+- Restart Codex once to load the newly registered REA capability into a fresh agent session.
 
 ## Recent commits
 
