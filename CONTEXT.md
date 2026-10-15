@@ -65,6 +65,8 @@ Still needed when Telegram launch begins:
 - Make normal-link guest joins idempotent so refresh/retry cannot generate confusing duplicate admission requests.
 - Improve the visual participant grid and device-error messages based on testing feedback.
 - Configure and test the Telegram bot/Mini App integration, then add the Telegram-specific one-tap create/share flow.
+- Recording is a later differentiator: use a real recording pipeline and deliver the finished recording to a Telegram chat when a Telegram-connected host chooses it. Do not rely on Telegram as the only recording store.
+- File sharing is not yet implemented; it requires object storage and access controls.
 - Add Vercel Preview and Development environment variables if preview deployments need full functionality.
 - Add GitHub Actions Vercel deployment secrets if GitHub-driven Vercel deploys are desired in addition to direct deployment.
 

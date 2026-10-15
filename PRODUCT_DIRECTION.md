@@ -81,8 +81,37 @@ Official references used for this comparison:
 ### P2 — Make VYNQ distinctive
 
 1. Finish Watch Together around simple, permitted content sources.
-2. Add lightweight reactions and room chat only if real testing shows they help.
-3. Improve host control and room polish after the core call passes repeated two-device tests.
+2. Add recording only after the core call is proven reliable. Recordings should have an unmistakable in-room indicator, host control, and participant notice/consent.
+3. When a Telegram-connected host records, deliver a **Recording ready** message to the chosen Telegram chat. Store the canonical recording in VYNQ-controlled object storage and send the file to Telegram only when it fits Telegram's current Bot API limits; otherwise send a secure VYNQ playback/download link.
+4. Add lightweight reactions and room chat only if real testing shows they help.
+5. Improve host control and room polish after the core call passes repeated two-device tests.
+
+## Capability decisions
+
+### Web and Telegram Mini App
+
+VYNQ is intentionally both:
+
+- **Web:** anyone can open a meeting link in a modern browser without Telegram.
+- **Telegram Mini App:** a Telegram user can launch VYNQ inside Telegram, use their verified Telegram identity, create a room, and share it into a chat quickly.
+
+The same room must work for both kinds of guest. Telegram makes creation and sharing faster; it must not exclude people who only have a browser.
+
+### Group calls
+
+VYNQ's LiveKit architecture can support more than two people. Before promoting it as a group-call product, we must add and test a responsive participant grid, active-speaker behavior, scalable presence, host moderation, and real device/network limits. The near-term proof point remains a reliable two-person call.
+
+### Screen sharing
+
+Screen sharing is implemented for the host through the browser/LiveKit path. Guest screen sharing is a product-control decision to add after core media testing; the host should be able to allow or prevent it.
+
+### File sharing
+
+File sharing is not implemented. It needs object storage, access control, expiration, size/type limits, and a clear in-room experience. It is useful, but less important than dependable audio/video. Telegram-connected rooms may later receive files in their Telegram chat, while web-only rooms need VYNQ-managed links.
+
+### Recording delivery to Telegram
+
+This is a good differentiator: after a host records a meeting, VYNQ can post a clean **Recording ready** card to Telegram. Telegram's ordinary Bot API has upload and retrieval constraints, and those limits can change; recordings can also exceed them. Therefore Telegram is the delivery/archive convenience layer, while VYNQ-controlled storage remains the reliable source of truth. Never record silently; show a clear recording state to every attendee.
 
 ## Product rule for future work
 
