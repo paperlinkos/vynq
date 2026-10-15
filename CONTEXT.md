@@ -29,6 +29,7 @@ The product direction is now explicit: VYNQ is a Telegram-first instant meeting 
 - LiveKit token generation is configured and verified.
 - Pre-join camera/microphone screen with preview, device pickers, and enter choices.
 - In-room microphone, camera, and screen-share controls.
+- Remote LiveKit audio tracks are now attached to the meeting page and removed when unsubscribed.
 - Watch Together foundations using LiveKit data messages.
 - Telegram Mini App authentication and webhook endpoints are implemented but not yet configured.
 
@@ -58,8 +59,7 @@ Still needed when Telegram launch begins:
 
 ## Known follow-up work
 
-- **P0:** Fix remote audio playback. The client currently attaches only video tracks, so incoming LiveKit audio is not mounted in the browser.
-- **P0:** Verify a complete two-device LiveKit audio/video call in real browsers after fixing remote audio.
+- **P0:** Verify a complete two-device LiveKit audio/video call in real browsers after the remote-audio fix.
 - Add in-call microphone, speaker, and camera switching plus an audio test/level indicator.
 - Make participant state explicitly distinguish waiting, admitted, connecting, connected, reconnecting, and left.
 - Make normal-link guest joins idempotent so refresh/retry cannot generate confusing duplicate admission requests.

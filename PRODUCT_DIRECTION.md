@@ -111,7 +111,7 @@ File sharing is not implemented. It needs object storage, access control, expira
 
 ### Recording delivery to Telegram
 
-This is a good differentiator: after a host records a meeting, VYNQ can post a clean **Recording ready** card to Telegram. Telegram's ordinary Bot API has upload and retrieval constraints, and those limits can change; recordings can also exceed them. Therefore Telegram is the delivery/archive convenience layer, while VYNQ-controlled storage remains the reliable source of truth. Never record silently; show a clear recording state to every attendee.
+This is a good differentiator: after a host records a meeting, VYNQ can post a clean **Recording ready** card to Telegram. For a Telegram-first, lightweight model, VYNQ can use temporary processing storage only: record, encode or split the file into Telegram-safe parts, upload them to a private Telegram archive chat, verify delivery, then delete the temporary copy. Telegram's ordinary Bot API has upload and retrieval constraints, and those limits can change; recordings can also exceed them. Therefore the archive workflow must support parts and a secure fallback link when required. Never record silently; show a clear recording state to every attendee.
 
 ## Product rule for future work
 
