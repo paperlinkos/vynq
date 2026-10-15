@@ -15,6 +15,7 @@ The product direction is now explicit: VYNQ is a Telegram-first instant meeting 
 - Hosting: Vercel
 - Database: Neon Postgres
 - Realtime media: LiveKit Cloud
+- Latest remote-audio fix is pushed to GitHub (`75736c6`), but Vercel production has not yet deployed it because the local Vercel CLI needs renewed authorization.
 
 ## Completed
 
