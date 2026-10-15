@@ -29,10 +29,12 @@ The product direction is now explicit: VYNQ is a Telegram-first instant meeting 
 - Leaving a meeting removes the participant from other attendees' presence lists.
 - LiveKit token generation is configured and verified.
 - Pre-join camera/microphone screen with preview, device pickers, and enter choices.
+- Pre-join now immediately requests browser camera/microphone permission, with a retry control if it was denied or unavailable.
 - In-room microphone, camera, and screen-share controls.
 - Remote LiveKit audio tracks are now attached to the meeting page and removed when unsubscribed.
 - In-call Devices panel with microphone, camera, and speaker switching, a speaker test, and microphone level feedback.
 - Participant tiles now distinguish a pending server presence (`Joining…`) from an actual LiveKit media connection (`Connected` / `Camera on`) and avoid duplicate tiles.
+- Admitting a guest closes the request and returns the host directly to the room; it no longer reopens the full participant list.
 - Initial group-call capacity is now capped at 25 people (including waiting guests); it is configurable through `VYNQ_MAX_PARTICIPANTS` up to 100.
 - Watch Together foundations using LiveKit data messages.
 - Telegram Mini App authentication and webhook endpoints are implemented but not yet configured.
