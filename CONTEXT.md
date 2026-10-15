@@ -8,6 +8,8 @@ VYNQ is a browser-first meeting app with invite links, host admission, participa
 
 The product direction is now explicit: VYNQ is a Telegram-first instant meeting room, not a feature-for-feature Zoom replacement. See `PRODUCT_DIRECTION.md` for the validated meeting model, feature comparison, and delivery order.
 
+The latest release-readiness findings are maintained in `AUDIT.md`.
+
 ## Live production site
 
 - URL: https://vynq-virid.vercel.app
