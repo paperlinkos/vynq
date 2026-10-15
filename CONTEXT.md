@@ -33,6 +33,7 @@ The latest release-readiness findings are maintained in `AUDIT.md`.
 - Pre-join camera/microphone screen with preview, device pickers, and enter choices.
 - Pre-join now immediately requests browser camera/microphone permission, with a retry control if it was denied or unavailable.
 - In-room microphone, camera, and screen-share controls.
+- Meeting-room stage redesign: a viewport-bound video canvas, always-visible bottom control dock, responsive grid view, focus view, per-participant pinning, and browser full-screen control. The inactive Watch Together sidebar no longer takes permanent space from calls.
 - Remote LiveKit audio tracks are now attached to the meeting page and removed when unsubscribed.
 - In-call Devices panel with microphone, camera, and speaker switching, a speaker test, and microphone level feedback.
 - Participant tiles now distinguish a pending server presence (`Joining…`) from an actual LiveKit media connection (`Connected` / `Camera on`) and avoid duplicate tiles.
@@ -77,6 +78,7 @@ Still needed when Telegram launch begins:
 - Make participant state explicitly distinguish waiting, admitted, connecting, connected, reconnecting, and left.
 - Make normal-link guest joins idempotent so refresh/retry cannot generate confusing duplicate admission requests.
 - Improve the visual participant grid and device-error messages based on testing feedback.
+- Test the new grid, focus/pin, and full-screen layouts with two or more real participants and refine the participant-strip behavior for larger groups.
 - Configure and test the Telegram bot/Mini App integration, then add the Telegram-specific one-tap create/share flow.
 - Recording is a later differentiator: use a real recording pipeline and deliver the finished recording to a Telegram chat when a Telegram-connected host chooses it. Do not rely on Telegram as the only recording store.
 - File sharing is not yet implemented; it requires object storage and access controls.

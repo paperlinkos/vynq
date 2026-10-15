@@ -46,3 +46,53 @@
 .prejoin-panel label { display: block; font-size: 12px; font-weight: 700; margin: 14px 0; }
 .prejoin-panel select { display: block; width: 100%; margin-top: 7px; padding: 13px; border: 1px solid #dedfd9; border-radius: 10px; background: #fff; color: #151716; font: inherit; }
 @media (max-width: 760px) { .prejoin { padding: 20px; } .prejoin-main { margin-top: 48px; grid-template-columns: 1fr; gap: 26px; } .prejoin-preview { border-radius: 15px; } .prejoin-panel h1 { font-size: 42px; } }
+
+/* Meeting stage: keep video and essential controls inside the viewport. */
+.room { height: 100svh; min-height: 0; overflow: hidden; }
+.room-stage { position: relative; min-height: 0; padding: 14px 18px 10px; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; overflow: hidden; }
+.stage-bar { min-height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 2px; }
+.stage-count { color: #aeb5ab; font: 11px 'DM Mono', monospace; }
+.layout-switcher { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid #3b403b; border-radius: 10px; background: #282c28; }
+.layout-button { width: 31px; height: 28px; display: grid; place-items: center; color: #b8c0b7; border: 0; border-radius: 7px; background: transparent; cursor: pointer; }
+.layout-button svg { width: 16px; height: 16px; }
+.layout-button:hover, .layout-button.active { color: #1f271b; background: #d5fb54; }
+.room-sidebar { display: none; }
+.video-grid { position: relative; min-height: 0; height: 100%; padding: 0; border-radius: 16px; background: #111411; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 10px; overflow: hidden; }
+.video-tile { min-height: 0; border-radius: 13px; background: #2a302b; overflow: hidden; isolation: isolate; }
+.video-tile > video { width: 100%; height: 100%; object-fit: cover; background: #151815; }
+.self-tile { min-height: 0; }
+.video-grid:has(#empty-state) { grid-template-columns: minmax(0, 1fr); }
+.empty-tile { position: absolute; z-index: 2; right: clamp(14px, 3vw, 44px); bottom: clamp(14px, 3vw, 44px); width: min(330px, calc(100% - 28px)); min-height: 0; padding: 24px; background: #2d332eeb; border: 1px solid #424942; backdrop-filter: blur(10px); box-shadow: 0 14px 40px #0007; }
+.empty-tile .empty-icon { width: 28px; height: 28px; }
+.empty-tile h2 { margin-top: 10px; }
+.tile-pin { position: absolute; z-index: 3; left: 11px; top: 11px; width: 31px; height: 31px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; color: #fff; background: #111a; opacity: 0; cursor: pointer; transition: opacity .15s, background .15s; }
+.tile-pin svg { width: 15px; height: 15px; }
+.video-tile:hover .tile-pin, .video-tile:focus-within .tile-pin { opacity: 1; }
+.tile-pin:hover { color: #202320; background: #d5fb54; }
+.room-layout-focus { grid-template-columns: minmax(0, 1fr) minmax(150px, 22%); grid-template-rows: repeat(auto-fit, minmax(0, 1fr)); }
+.room-layout-focus .video-tile { display: none; }
+.room-layout-focus .video-tile.is-pinned { display: block; grid-column: 1; grid-row: 1 / -1; }
+.room-layout-focus .video-tile:not(.is-pinned) { display: block; grid-column: 2; min-height: 0; }
+.controls { flex: 0 0 auto; min-height: 76px; padding: 10px 18px; background: #1e211e; z-index: 4; }
+.control-dock { width: min(680px, 100%); margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 12px; }
+.control-group { gap: 7px; }
+.control, .leave { min-width: 62px; height: 50px; }
+.leave { position: static; min-width: 70px; }
+
+@media (max-width: 760px) {
+  .room-header { height: 58px; gap: 10px; }
+  .room-header .connection-state { display: none; }
+  .room-title b { display: none; }
+  .room-stage { padding: 9px 10px 8px; gap: 7px; }
+  .stage-bar { min-height: 27px; }
+  .video-grid { grid-template-columns: 1fr; gap: 7px; border-radius: 12px; }
+  .empty-tile { right: 10px; bottom: 10px; width: calc(100% - 20px); padding: 18px; }
+  .room-layout-focus { grid-template-columns: minmax(0, 1fr) 86px; }
+  .controls { min-height: 68px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); overflow-x: auto; }
+  .control-dock { width: max-content; min-width: 100%; gap: 7px; justify-content: flex-start; }
+  .control-group { gap: 6px; }
+  .control, .leave { width: 46px; min-width: 46px; height: 48px; }
+  .control span, .leave { font-size: 0; }
+  .leave::before { content: 'Leave'; font-size: 10px; }
+  .tile-pin { opacity: 1; }
+}
