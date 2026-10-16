@@ -8,6 +8,22 @@
   }
 }
 
+.chat-panel { min-height: 0; height: 100%; display: flex; flex-direction: column; gap: 10px; }
+.chat-tabs { display: flex; gap: 12px; border-bottom: 1px solid #3b403b; padding-bottom: 9px; }
+.chat-tabs .active { color: #d5fb54; }
+.chat-title { margin: 0; font-size: 13px; font-weight: 800; }
+.chat-messages { min-height: 180px; flex: 1; overflow: auto; display: grid; align-content: start; gap: 9px; padding-right: 3px; }
+.chat-message { padding: 9px 10px; border-radius: 10px; background: #353b36; }
+.chat-message.self { background: #495642; }
+.chat-message small { color: #c7cec4; font: 10px 'DM Mono', monospace; }
+.chat-message p { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.45; }
+.chat-empty, .chat-error { margin: 0; color: #abb1a9; font-size: 12px; }
+.chat-error { color: #ffaaa1; min-height: 16px; }
+.chat-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.chat-composer textarea { resize: vertical; min-height: 44px; max-height: 110px; border: 1px solid #4d554d; border-radius: 9px; padding: 9px; color: #fff; background: #202520; font: 12px Manrope, sans-serif; }
+.chat-composer .button { min-height: 44px; padding: 0 13px; }
+.chat-person { text-align: left; color: #fff; border: 1px solid #3b403b; border-radius: 9px; background: #303530; padding: 10px; cursor: pointer; }
+
 .waiting-alert {
   border: 0;
   border-radius: 8px;
@@ -95,4 +111,37 @@
   .control span, .leave { font-size: 0; }
   .leave::before { content: 'Leave'; font-size: 10px; }
   .tile-pin { opacity: 1; }
+}
+
+/* Keep these last: they intentionally override the earlier Phase 1 stage rules. */
+.room-stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.stage-main { min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; }
+.video-grid.room-layout-grid { grid-template-columns: repeat(var(--meeting-columns, 1), minmax(0, 1fr)); }
+.room-sidebar { display: none; min-width: 0; overflow: auto; }
+.room-sidebar.is-open { display: block; }
+.room:has(.room-sidebar.is-open) .room-stage { grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); }
+.sidebar-head { display: flex; align-items: center; justify-content: space-between; }
+.sidebar-head .sidebar-label { margin-bottom: 0; }
+.participant-list { display: grid; gap: 8px; }
+.participant-row { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid #3b403b; }
+.participant-avatar { width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: #d5fb54; color: #273020; font-size: 10px; font-weight: 800; }
+.participant-name { min-width: 0; flex: 1; font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
+.participant-name i { font-style: normal; color: #c8ea65; font: 10px 'DM Mono', monospace; }
+.participant-name small { display: block; margin-top: 3px; color: #abb1a9; font: 10px 'DM Mono', monospace; }
+.room-layout-speaker { grid-template-columns: minmax(0, 1fr) minmax(130px, 23%); grid-template-rows: repeat(auto-fit, minmax(0, 1fr)); }
+.room-layout-speaker .video-tile { display: block; grid-column: 2; min-height: 0; }
+.room-layout-speaker .video-tile.is-pinned { grid-column: 1; grid-row: 1 / -1; }
+.room-layout-focus .video-tile.is-pinned { box-shadow: inset 0 0 0 2px #d5fb54; }
+.watch-panel[hidden], .participant-panel[hidden] { display: none; }
+.invite-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+@media (max-width: 760px) {
+  .room:has(.room-sidebar.is-open) .room-stage { grid-template-columns: minmax(0, 1fr); }
+  .room-sidebar.is-open { position: fixed; z-index: 8; inset: 58px 0 0; display: block; padding: 20px; border-radius: 0; background: #282c28; }
+  .video-grid.room-layout-grid { grid-template-columns: repeat(var(--meeting-columns, 1), minmax(0, 1fr)); }
+  .control-group:nth-of-type(2) .control[data-action="watch-toggle"], .control-group:nth-of-type(2) .control[data-control="screen"] { display: flex; }
+  .room-layout-speaker { grid-template-columns: minmax(0, 1fr) 82px; }
+  .room-layout-speaker .video-tile { grid-column: 2; }
+  .room-layout-speaker .video-tile.is-pinned { grid-column: 1; }
+  .control-dock { padding-right: 4px; }
+  .invite-actions .share-link:last-child { display: none; }
 }

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "npm run build && VYNQ_STATIC_DIR=dist node --env-file=.env lib/vynq-server.mjs",
-    "test": "node --test",
+    "test": "node --test test/meeting-id.test.js test/meeting-layout.test.js test/invitations.test.js && node test/meeting-lifecycle-check.mjs && node test/telegram-bot-check.mjs && node test/security-check.mjs",
     "build": "vite build"
   },
   "dependencies": {
